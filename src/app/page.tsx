@@ -4,6 +4,7 @@
 import type { ChangeEvent, FormEvent } from "react";
 import { useState, useEffect } from "react";
 import NextImage from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,9 @@ import { generatePoemFromThemes } from "@/ai/flows/generate-poem-from-themes";
 import type { GeneratePoemFromThemesOutput } from "@/ai/flows/generate-poem-from-themes";
 import { useAuth } from "@/context/AuthContext";
 import { signOut } from "firebase/auth";
-import { UploadCloud, Download, Loader2, Image as ImageIcon, FileText, LogOut, BookUser, UserCircle } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { UploadCloud, Download, Loader2, Image as ImageIcon, FileText, LogOut, BookUser, UserCircle, History } from "lucide-react";
 
 const poeticStyles = ["Haiku", "Limerick", "Sonnet", "Free Verse", "Ode", "Ballad", "Epic"];
 
@@ -35,7 +38,6 @@ export default function PhotoPoetPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Wait for Firebase auth to initialize
     const unsubscribe = auth.onAuthStateChanged(currentUser => {
       if (!currentUser) {
         router.push("/auth");
@@ -43,7 +45,7 @@ export default function PhotoPoetPage() {
         setIsAuthLoading(false);
       }
     });
-    return () => unsubscribe(); // Cleanup subscription
+    return () => unsubscribe();
   }, [auth, router]);
 
 
@@ -95,6 +97,22 @@ export default function PhotoPoetPage() {
       
       setGeneratedPoem(poemResult.poem);
 
+      if (user && poemResult.poem && photoPreview && photoFile) {
+        try {
+          await addDoc(collection(db, "userHistory"), {
+            userId: user.uid,
+            photoPreview: photoPreview,
+            photoFileName: photoFile.name,
+            selectedStyle: selectedStyle,
+            generatedPoem: poemResult.poem,
+            createdAt: serverTimestamp(),
+          });
+        } catch (saveError) {
+          console.error("Error saving history:", saveError);
+          // Optionally, inform the user that history saving failed, e.g., using a toast.
+        }
+      }
+
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "An unknown error occurred during poem generation.");
@@ -139,9 +157,17 @@ export default function PhotoPoetPage() {
     <div className="min-h-screen flex flex-col items-center p-4 md:p-8 bg-background">
       <header className="w-full max-w-6xl mb-8 md:mb-12">
         <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <UserCircle className="h-7 w-7 text-primary"/>
-            <p className="text-lg text-foreground font-medium">Welcome, {user.email}</p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <UserCircle className="h-7 w-7 text-primary"/>
+              <p className="text-lg text-foreground font-medium">Welcome, {user.email}</p>
+            </div>
+            <Link href="/history" passHref>
+              <Button variant="outline" size="sm">
+                <History className="mr-2 h-4 w-4" />
+                My History
+              </Button>
+            </Link>
           </div>
           <Button onClick={() => auth && signOut(auth)} variant="outline" size="sm">
             <LogOut className="mr-2 h-4 w-4" />
@@ -259,5 +285,3 @@ export default function PhotoPoetPage() {
     </div>
   );
 }
-
-    
