@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
+import { AuthContextProvider } from '@/context/AuthContext';
 export const metadata: Metadata = {
   title: 'Photo Poet',
   description: 'Generate poems from your photos',
@@ -20,8 +21,10 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        {children}
-        <Toaster />
+        <AuthContextProvider>
+          {children}
+          <Toaster />
+        </AuthContextProvider>
       </body>
     </html>
   );

@@ -13,6 +13,8 @@ import { analyzePhotoThemes } from "@/ai/flows/analyze-photo-themes";
 import type { AnalyzePhotoThemesOutput } from "@/ai/flows/analyze-photo-themes";
 import { generatePoemFromThemes } from "@/ai/flows/generate-poem-from-themes";
 import type { GeneratePoemFromThemesOutput } from "@/ai/flows/generate-poem-from-themes";
+import { useAuth } from "@/context/AuthContext";
+import { signOut } from "firebase/auth";
 import { UploadCloud, Download, Loader2, Image as ImageIcon, FileText } from "lucide-react";
 
 const poeticStyles = ["Haiku", "Limerick", "Sonnet", "Free Verse", "Ode", "Ballad", "Epic"];
@@ -25,6 +27,8 @@ export default function PhotoPoetPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [poemKey, setPoemKey] = useState(0); // For re-triggering animation
+
+  const { user, auth } = useAuth();
 
   useEffect(() => {
     if (generatedPoem) {
@@ -108,6 +112,13 @@ export default function PhotoPoetPage() {
   return (
     <div className="min-h-screen flex flex-col items-center p-4 md:p-8">
       <header className="mb-8 md:mb-12 text-center">
+        {user ? (
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-lg">Welcome, {user.email}</p>
+            <Button onClick={() => auth && signOut(auth)} variant="outline">Sign Out</Button>
+          </div>
+        ) : null}
+
         <h1 className="text-5xl md:text-6xl font-headline font-bold text-primary">Photo Poet</h1>
         <p className="text-lg md:text-xl text-muted-foreground mt-2">Transform your photos into lyrical masterpieces.</p>
       </header>
