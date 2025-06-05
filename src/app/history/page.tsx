@@ -20,7 +20,7 @@ interface HistoryItem {
   photoFileName: string;
   selectedStyle: string;
   generatedPoem: string;
-  createdAt: Timestamp;
+  createdAt: Timestamp | null; // Allow null for createdAt initially
 }
 
 export default function HistoryPage() {
@@ -54,7 +54,10 @@ export default function HistoryPage() {
           const querySnapshot = await getDocs(q);
           const userHistory: HistoryItem[] = [];
           querySnapshot.forEach((doc) => {
-            userHistory.push({ id: doc.id, ...doc.data() } as HistoryItem);
+            const data = doc.data();
+            // Ensure createdAt is treated as Timestamp or null
+            const createdAt = data.createdAt instanceof Timestamp ? data.createdAt : null;
+            userHistory.push({ id: doc.id, ...data, createdAt } as HistoryItem);
           });
           setHistory(userHistory);
         } catch (error) {
@@ -122,7 +125,13 @@ export default function HistoryPage() {
                     {item.selectedStyle} Poem
                   </CardTitle>
                   <CardDescription className="text-xs text-muted-foreground">
-                    Created on: {item.createdAt.toDate().toLocaleDateString()} at {item.createdAt.toDate().toLocaleTimeString()}
+                    {item.createdAt && typeof item.createdAt.toDate === 'function' ? (
+                      <>
+                        Created on: {item.createdAt.toDate().toLocaleDateString()} at {item.createdAt.toDate().toLocaleTimeString()}
+                      </>
+                    ) : (
+                      'Date not available'
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col space-y-4">
