@@ -1,8 +1,11 @@
-import { initializeApp, FirebaseApp } from 'firebase/app';
+// lib/firebase.ts
+
+import { initializeApp, FirebaseApp, getApps, getApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 
-// Replace with your actual Firebase project configuration
+// Firebase config from your .env.local or .env file
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -11,13 +14,12 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
-// Initialize Firebase
-const app: FirebaseApp = initializeApp(firebaseConfig);
 
-// Initialize Firebase Authentication and get a reference to the service
+// Prevent multiple initializations (Next.js HMR or Vercel)
+const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
 const auth: Auth = getAuth(app);
-
-// Initialize Cloud Firestore and get a reference to the service
 const db: Firestore = getFirestore(app);
+const storage: FirebaseStorage = getStorage(app);
 
-export { app, auth, db };
+export { app, auth, db, storage };
